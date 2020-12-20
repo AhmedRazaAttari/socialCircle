@@ -8,11 +8,7 @@ import * as Location from 'expo-location';
 import fire, { database } from "../database/firebase";
 
 import doctor from '../../assets/doctor.png';
-//import HaversineGeolocation from 'haversine-geolocation';
 import AsyncStorage from '@react-native-community/async-storage';
-// import Geocoder from 'react-native-geocoding';
-// import Geolocation from 'react-native-geolocation-service';  
-// Geocoder.init("AIzaSyAkDQbEOQqx5vqa1y0gBsx3JD8GUPSroyo");
 const screen = Dimensions.get('window')
 const ASPECT_RATIO = screen.width / screen.height;
 const LATITUDE = 24.8822179;
@@ -40,9 +36,15 @@ export default function map({ navigation }) {
   const [UserLocation, setLocation] = useState(false);
   const [Userlatitude, setLatitude] = useState(null)
   const [Userlongitude, setLongitude] = useState(null)
+
+  const [CurrentUserInterest, setCurrentUserInteres] = useState([])
+  const [AllUserInterest, setAllUserInterest] = useState([])
+  // const [Userlongitude, setLongitude] = useState(null)
+
   const mapRef = useRef(null);
   const UserId = fire.auth().currentUser.uid
-  // let mapRef = createRef();
+
+
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestPermissionsAsync();
@@ -57,6 +59,27 @@ export default function map({ navigation }) {
         setLongitude(snapshot.val().longitude)
         setLocation(true);
       })
+
+      fire.database().ref("users").once("value").then(function (snapshot) {
+        snapshot.forEach(function (childSnapshot) {
+          if (childSnapshot.key === UserId) {
+            setCurrentUserInteres(childSnapshot.val().Interest)
+          }
+          // else {
+          // for (var i = 0; i < snapshot.val.length; i++) {
+          //   if (childSnapshot.key === UserId) {
+          //   }
+          //   else {
+          //     setAllUserInterest(prev => [...prev, snapshot.val()])
+          //     console.log("ALLUSERINTEREST ===>", AllUserInterest)
+          //   }
+          // }
+          // }
+          // console.log("SNAPSHOT.VAL", childSnapshot.key)
+          // console.log("CHILDSNAPSHOT ==>", childSnapshot.val().Interest)
+        })
+      })
+
       // let location = await Location.getCurrentPositionAsync({});
       // setLatitude(location.coords.latitude)
       // setLongitude(location.coords.longitude)
@@ -173,5 +196,3 @@ const styles = StyleSheet.create({
     fontSize: 16
   }
 });
-
-// export default map;
