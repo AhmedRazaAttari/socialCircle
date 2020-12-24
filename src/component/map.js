@@ -9,6 +9,7 @@ import fire, { database } from "../database/firebase";
 
 import doctor from '../../assets/doctor.png';
 import AsyncStorage from '@react-native-community/async-storage';
+import { useSafeArea } from 'react-native-safe-area-context';
 const screen = Dimensions.get('window')
 const ASPECT_RATIO = screen.width / screen.height;
 const LATITUDE = 24.8822179;
@@ -35,10 +36,13 @@ export default function map({ navigation }) {
 
   const [UserLocation, setLocation] = useState(false);
   const [Userlatitude, setLatitude] = useState(null)
-  const [Userlongitude, setLongitude] = useState(null)
+  const [Userlongitude, setLongitude] = useState(null);
+  const [isloading, setLoading] = useState(true)
 
   const [CurrentUserInterest, setCurrentUserInteres] = useState([])
   const [AllUserInterest, setAllUserInterest] = useState([])
+  const [AllUsers, setAllUsers] = useState([])
+  const [matchedUsers, setMatchedUsers] = useState([])
   // const [Userlongitude, setLongitude] = useState(null)
 
   const mapRef = useRef(null);
@@ -46,6 +50,7 @@ export default function map({ navigation }) {
 
 
   useEffect(() => {
+
     (async () => {
       let { status } = await Location.requestPermissionsAsync();
       if (status !== 'granted') {
@@ -53,32 +58,9 @@ export default function map({ navigation }) {
         return;
       }
 
-      fire.database().ref("users/" + UserId).child("Location").once("value").then(function (snapshot) {
-        // snapshot.val()
-        setLatitude(snapshot.val().latitude)
-        setLongitude(snapshot.val().longitude)
-        setLocation(true);
-      })
 
-      fire.database().ref("users").once("value").then(function (snapshot) {
-        snapshot.forEach(function (childSnapshot) {
-          if (childSnapshot.key === UserId) {
-            setCurrentUserInteres(childSnapshot.val().Interest)
-          }
-          // else {
-          // for (var i = 0; i < snapshot.val.length; i++) {
-          //   if (childSnapshot.key === UserId) {
-          //   }
-          //   else {
-          //     setAllUserInterest(prev => [...prev, snapshot.val()])
-          //     console.log("ALLUSERINTEREST ===>", AllUserInterest)
-          //   }
-          // }
-          // }
-          // console.log("SNAPSHOT.VAL", childSnapshot.key)
-          // console.log("CHILDSNAPSHOT ==>", childSnapshot.val().Interest)
-        })
-      })
+      // isloading && getUsers()
+      isloading && getCurrentUserLocation_Interest()
 
       // let location = await Location.getCurrentPositionAsync({});
       // setLatitude(location.coords.latitude)
@@ -88,6 +70,127 @@ export default function map({ navigation }) {
 
     })();
   })
+
+  function getCurrentUserLocation_Interest() {
+
+    fire.database().ref("users/" + UserId).child("Location").once("value").then(function (snapshot) {
+      // snapshot.val()
+      setLatitude(snapshot.val().latitude)
+      setLongitude(snapshot.val().longitude)
+      setLocation(true);
+    })
+
+    fire.database().ref("users/" + UserId).child("Interest").once("value").then(function (snapshot) {
+
+      // console.log("SNAP ", snapshot.val())
+      setCurrentUserInteres(snapshot.val())
+      setLoading(false)
+      getUsers()
+    })
+  }
+
+  function getUsers() {
+
+    fire.database().ref("users").once("value").then(function (snapshot) {
+
+      const uids = Object.keys(snapshot.val())
+      var tempArr = [];
+      // console.log("uids", uids)
+      for (var i = 0; i < uids.length; i++) {
+        if (UserId === uids[i]) {
+        }
+        else {
+          // console.log("uids", uids[i])
+          fire.database().ref("users/" + uids[i]).once("value").then(function (snapshot) {
+            tempArr.push({ [snapshot.key]: snapshot.val() })
+
+          }).then(() => {
+            getUsersLocation(tempArr)
+          })
+        }
+      }
+    })
+
+  }
+
+
+  function getUsersLocation(tempArr) {
+    console.log("AllUSERS", tempArr)
+
+    
+  }
+
+  // snapshot.forEach(function (childSnapshot) {
+  //   if (childSnapshot.key === UserId) {
+  //   }
+  //   else {
+  //     // console.log("NEw KEYS", childSnapshot.key)
+  //     // console.log("NEW VALUES", childSnapshot.val().Interest)
+  //     var tempArr = [];
+  //     tempArr = childSnapshot.val().Interest;
+  //     const found = CurrentUserInterest.some(item => tempArr.includes(item))
+  //     // console.log(found)
+  //     if (found) {
+  //       // console.log("NEw KEYS", childSnapshot.key)
+  //       if (matchedUsers.includes(childSnapshot.key)) {
+  //         console.log("FIND")
+  //       } else {
+  //         setMatchedUsers(oldArray => [...oldArray, childSnapshot.key]);
+  //       }
+  //       // setMatchedUsers(matchedUsers)
+  //       // console.log("NEW VALUES", childSnapshot.val().Interest)
+  //     }
+  //   }
+  // })
+
+  // const arr = [];
+  // fire.database().ref("users").once("value").then(function (snapshot) {
+  //   for (const [key, value] of Object.entries(snapshot.val())) {
+  //     if (UserId === key) {
+  //     }
+  //     else {
+  //       arr.push(key)
+  //     }
+  //   }
+  // }).then(() => {
+  //   console.log(arr)
+  //   setAllUserInterest(arr)
+  //   // console.log(AllUserInterest)
+  //   setLoading(false)
+  // }).then(() => {
+
+  //   if (AllUserInterest.length) {
+
+  //     for (var i = 0; i < AllUserInterest.length; i++) {
+
+  //       fire.database().ref("users/" + AllUserInterest[i]).child("Interest").once("value").then(function (snapshot) {
+  //         // console.log("SNAAAAAAAAAAAP", snapshot.val())
+  //         if (snapshot.exists()) {
+  //           var arr2 = [];
+  //           arr2 = snapshot.val();
+  //           for (var x = 0; x < arr2.length; x++) {
+  //             for (var z = 0; z < CurrentUserInterest.length; z++) {
+  //               if (arr2[x] === CurrentUserInterest[z]) {
+  //                 // console.log("AAAAAARRR ===.", arr2[x] + CurrentUserInterest[z] + " " + AllUserInterest[i])
+  //               }
+  //             }
+  //           }
+  //           // console.log("CURINTER" , CurrentUserInterest)
+  //           // console.log(AllUserInterest[i])
+  // const found = CurrentUserInterest.some(item => arr2.includes(item))
+  //           // console.log(found)
+  //           if (found) {
+  //             // setMatchedUsers(matchedUsers.push(AllUserInterest[i]))
+  //           }
+  //         }
+  //       })
+  //     }
+  //   }
+  // }).then(() => {
+  //   // console.log("CURRENT USER INT", CurrentUserInterest)
+  //   // console.log("Matched USERs", matchedUsers)
+  // })
+
 
 
   return (
