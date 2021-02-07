@@ -1,262 +1,151 @@
-import React, { Component } from 'react';
-import { StyleSheet, Text, View, Image, Animated, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import React, { Component, useState, useEffect } from 'react';
+import { StyleSheet, Text, View, Image, Animated, ActivityIndicator, ScrollView, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { Header, Left, Right, Body, Input, Form } from 'native-base';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { AntDesign } from '@expo/vector-icons';
 import { GiftedChat } from 'react-native-gifted-chat';
-//import firebaseSvc from './fbFunction';
-/*import AsyncStorage from '@react-native-community/async-storage';*/
-class chat extends Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-            messages: [],
-            // userFCM:this.props.navigation.getParam('fcmToken', 'null'),
-            /* userImage:''*/
-        }
-    }
-    /*    async componentDidMount(){ 
-            this.setState({
-                messages:[],
-            })
-            try {
-                const image = await AsyncStorage.getItem('@userImage');
-                if(image !==null) {
-    
-                    this.setState({
-                        userImage:image
-                    })
-                }
-            } catch(error) {
-    
-            }
-            await firebaseSvc.refOn(message =>
-                this.setState(previousState => ({
-                    messages: GiftedChat.append(previousState.messages, message),
-                })), this.props.navigation.getParam('chatName' , 'null')
-                );
-        }*/
+import fire, { database } from "../database/firebase";
 
-    sendMessage(message) {
-        const url = 'https://swoot.herokuapp.com/api/messaging';
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: message[0].text,
-                name: this.props.navigation.getParam('uName', 'null'),
-                fcm: this.state.userFCM,
-                /*userImage: this.state.userImage*/
-            }),
+
+export default function chat({ route, navigation }) {
+
+    const [messagesdata, setMessages] = useState([])
+    const [isloading, setLoading] = useState(true)
+    const { uid, name } = route.params;
+
+
+    useEffect(() => {
+
+        var UserId = fire.auth().currentUser.uid;
+
+        var tempArr = [];
+        fire.database().ref("users/" + UserId).child("ChatHeads" + "/" + uid + "/" + "ChatMsgs").once("value").then(function (snapshot) {
+            snapshot.forEach(function (childSnapshot) {
+                tempArr.push(childSnapshot.val())
+            })
+
+        }).then(() => {
+            console.log("tempArr", tempArr)
+            tempArr.reverse();
+            setMessages(tempArr)
+        })
+    }, [])
+
+
+    function onSend(newMessage = []) {
+
+        var UserId = fire.auth().currentUser.uid;
+
+        fire.database().ref("users/" + UserId).child("ChatHeads" + "/" + uid).update({
+            name: name,
+            uid: uid,
         })
 
-            .then(res => res.json())
-            .then(res => {
-                if (res.success) {
+        fire.database().ref("users/" + uid).child("ChatHeads" + "/" + UserId).update({
+            name: name,
+            uid: UserId,
+        })
 
+        var newPostKey = fire.database().ref().child('posts').push().key;
+        for (var i = 0; i < newMessage.length; i++) {
+
+            fire.database().ref("users/" + UserId).child("ChatHeads" + "/" + uid + "/" + "ChatMsgs" + "/" + newPostKey).set({
+                _id: newMessage[i]._id,
+                createdAt: newMessage[i].createdAt.toUTCString(),
+                text: newMessage[i].text,
+                user: {
+                    _id: 1,
                 }
             })
-            .catch(error => {
-                console.log(error)
-            });
+
+            fire.database().ref("users/" + uid).child("ChatHeads" + "/" + UserId + "/" + "ChatMsgs" + "/" + newPostKey).set({
+                _id: newMessage[i]._id,
+                createdAt: newMessage[i].createdAt.toUTCString(),
+                text: newMessage[i].text,
+                user: {
+                    _id: 2,
+                    avatar: fire.auth().currentUser.photoURL,
+                }
+            })
+
+        }
+        setMessages(GiftedChat.append(messagesdata, newMessage))
     }
 
 
-    onSend(messages = []) {
 
-        console.log(messages, messages.length)
-        this.setState(previousState => ({
-            messages: GiftedChat.append(previousState.messages, messages),
-        }))
-    }
-
-    render() {
-        return (
-
-            <View style={style.container}>
-                <ScrollView>
-                    <Header style={style.header}>
-                        <Left style={{ flex: 1 }}>
-                            <TouchableOpacity onPress={() => this.props.navigation.navigate('map')} style={{ marginLeft: wp(2) }}>
-                                <Icon name="angle-left" size={30} />
-                            </TouchableOpacity>
-                        </Left>
-                        <Body style={style.body}>
-                            <Text style={style.text1}>Social Circle</Text>
-                        </Body>
-                        <Right style={{ flex: 1 }}>
-
-                        </Right>
-                    </Header>
-                    <View style={style.view1}>
-                        <Icon name="user-alt" size={30} color="#000" style={style.userAlt} onPress={() => this.props.navigation.navigate('profile')} />
-                        <TouchableOpacity style={style.o1} onPress={() => this.props.navigation.navigate('publicprofile')}>
-                            <Text style={style.text2}>Millers</Text>
-                            <Text style={style.text3}>Active Now</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={style.o2} onPress={() => this.props.navigation.navigate('meetupdetails')}>
-                            <Text style={style.text4}>Select</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <View style={style.view0}>
-                        <View style={style.mainView}>
-                            <View style={style.view2}>
-                                <View style={style.view2_1} onPress={() => this.props.navigation.navigate('publicprofile')}>
-                                    <Icon name="user-friends" size={30} color="#000" style={style.user1} />
-                                    <Text style={style.text5}>Millers</Text>
-                                </View>
-                            </View>
-                            <View style={style.view2}>
-                                <View style={style.view2_1}>
-                                    <Icon name="user-friends" size={30} color="#000" style={style.user1} />
-                                    <Text style={style.text5}>FC CAPS</Text>
-                                </View>
-                            </View>
-                            <View style={style.view2}>
-                                <View style={style.view2_1}>
-                                    <Icon name="user-tie" size={30} color="#000" style={style.user1} />
-                                    <Text style={style.text5}>Rocky</Text>
-                                </View>
-                            </View>
-                            <View style={style.view2}>
-                                <View style={style.view2_1}>
-                                    <Icon name="user" size={30} color="#000" style={style.user1} />
-                                    <Text style={style.text5}>FC CAPS</Text>
-                                </View>
-                            </View>
-                            <View style={style.view2}>
-                                <View style={style.view2_1}>
-                                    <Icon name="user-tie" size={30} color="#000" style={style.user1} />
-                                    <Text style={style.text5}>FC CAPS</Text>
-                                </View>
-                            </View>
-                            <View style={style.view2}>
-                                <View style={style.view2_1}>
-                                    <Icon name="user" size={30} color="#000" style={style.user1} />
-                                    <Text style={style.text5}>FC CAPS</Text>
-                                </View>
-                            </View>
-                            <View style={style.view2}>
-                                <View style={style.view2_1}>
-                                    <Icon name="user" size={30} color="#000" style={style.user1} />
-                                    <Text style={style.text5}>FC CAPS</Text>
-                                </View>
-                            </View>
-                            <View style={style.view2}>
-                                <View style={style.view2_1}>
-                                    <Icon name="user" size={30} color="#000" style={style.user1} />
-                                    <Text style={style.text5}>FC CAPS</Text>
-                                </View>
-                            </View>
-                            <View style={style.view2}>
-                                <View style={style.view2_1}>
-                                    <Icon name="user-friends" size={30} color="#000" style={style.user1} />
-                                    <Text style={style.text5}>FC CAPS</Text>
-                                </View>
-                            </View>
-                        </View>
-
-
-                        <View style={style.viewa}>
-                            <ScrollView>
-                                <View style={style.viewaa}>
-                                    <View style={style.viewab}>
-                                        <Text style={style.text6}>Hi!</Text>
-                                        <Icon name="user" size={30} color="#000" style={style.icona} />
-                                    </View>
-                                    <Text style={style.text7}>7:00am</Text>
-                                </View>
-                                <View style={style.viewaa}>
-                                    <View style={style.viewab}>
-                                        <Icon name="user" size={30} color="#000" style={style.icona} />
-                                        <Text style={style.text6}>How are you?</Text>
-
-                                    </View>
-
-                                </View>
-                                <View style={style.viewaa}>
-                                    <View style={style.viewab}>
-                                        <Text style={style.text6}>Lets go fishing</Text>
-                                        <Icon name="user" size={30} color="#000" style={style.icona} />
-                                    </View>
-                                    <Text style={style.text6}>Today</Text>
-                                </View>
-                                <View style={style.viewaa}>
-                                    <View style={style.viewab}>
-                                        <Icon name="user" size={30} color="#000" style={style.icona} />
-                                        <Text style={style.text6}>Any time</Text>
-                                    </View>
-                                </View>
-
-                                <View style={style.viewaa}>
-                                    <View style={style.viewab}>
-                                        <Icon name="user" size={30} color="#000" style={style.icona} />
-                                        <Text style={style.text6}>How are you?</Text>
-
-                                    </View>
-
-                                </View>
-                                <View style={style.viewaa}>
-                                    <View style={style.viewab}>
-                                        <Text style={style.text6}>Lets go fishing</Text>
-                                        <Icon name="user" size={30} color="#000" style={style.icona} />
-                                    </View>
-                                    <Text style={style.text6}>Today</Text>
-                                </View>
-                                <View style={style.viewaa}>
-                                    <View style={style.viewab}>
-                                        <Icon name="user" size={30} color="#000" style={style.icona} />
-                                        <Text style={style.text6}>Any time</Text>
-                                    </View>
-                                </View>
-                            </ScrollView>
-                            {/* <View style={style.viewb}>
-        <Text style={style.text8}>To change meeting time click on</Text>
-        <TouchableOpacity>
-        <Text style={style.text9}>VOTE NOW</Text>
-        </TouchableOpacity>
-        </View> */}
-
-                        </View>
-
-                    </View>
-                    <View style={style.viewc}>
-                        <View style={style.viewca}>
-                            <TouchableOpacity>
-                                <Icon name="smile" size={30} color="#000" style={style.iconb} />
-                            </TouchableOpacity>
-                        </View>
-                        <View style={style.viewcb}>
-                            <Input placeholder="typing..." placeholderTextColor="#000" />
-                        </View>
-
-                        <TouchableOpacity>
-                            <Icon name="paper-plane" size={30} color="#000" style={style.icon} />
-                        </TouchableOpacity>
-                    </View>
-                </ScrollView>
-
-                <View>
-                    <GiftedChat
-                        messages={this.state.messages}
-                        onSend={(message) => {
-                            this.sendMessage(message);
-
-                            firebaseSvc.send(message, this.props.navigation.getParam('chatName', 'null'))
-                        }}
-                        scrollToBottom
-                        renderAvatarOnTop
-                        user={{
-                            _id: this.props.navigation.getparam('uid', 'null'),
-                            name: this.props.navigation.getParam('uName', 'null'),
-                        }}
-                    />
-                </View>
-
+    return (
+        <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: "row", height: 70, width: "100%", backgroundColor: "white", alignItems: "center" }}>
+                <TouchableOpacity
+                    // style={{ position: "absolute", top: 50, left: 20 }}
+                    onPress={() => navigation.navigate("map")}
+                >
+                    <AntDesign name="left" size={30} color="black" style={{ marginTop: 20, marginLeft: 20 }} />
+                </TouchableOpacity>
+                <Text style={{ marginLeft: 20, fontSize: 20, marginTop: 20, fontWeight: "bold" }}>{name}</Text>
             </View>
-        );
-    }
+
+            <KeyboardAvoidingView style={{ flex: 1 }} >
+                {/* <ScrollView showsVerticalScrollIndicator={false}> */}
+                <GiftedChat
+                    isAnimated={true}
+                    // renderAccessory={CustomView}
+                    // renderSend={this.SendBtn}
+                    messages={messagesdata}
+                    onSend={newMessages => onSend(newMessages)}
+                    user={{
+                        _id: 1,
+                    }}
+                />
+                {/* </ScrollView> */}
+            </KeyboardAvoidingView>
+        </View>
+    )
 }
+
+// export default class chat extends Component {
+//     constructor(props) {
+//         super(props)
+//         this.state = {
+//             messages: [],
+//         }
+//     }
+
+//     componentDidMount() {
+//         console.log(this.props.navigation)
+//     }
+
+//     onSend(messages = []) {
+
+//         console.log(messages, messages.length)
+//         this.setState(previousState => ({
+//             messages: GiftedChat.append(previousState.messages, messages),
+//         }))
+//     }
+
+//     render() {
+//         return (
+//             <ScrollView>
+// <Header style={style.header}>
+//     <Left style={{ flex: 1 }}>
+//         <TouchableOpacity onPress={() => this.props.navigation.navigate('map')} style={{ marginLeft: wp(2) }}>
+//             <Icon name="angle-left" size={30} />
+//         </TouchableOpacity>
+//     </Left>
+//     <Body style={style.body}>
+//         <Text style={style.text1}>Social Circle</Text>
+//     </Body>
+//     <Right style={{ flex: 1 }}>
+
+//     </Right>
+// </Header>
+//             </ScrollView>
+//         )
+//      
+//     }
+// }
 const style = StyleSheet.create({
     icon: {
         paddingHorizontal: wp(2),
@@ -410,6 +299,9 @@ const style = StyleSheet.create({
         color: '#aab973'
     },
     header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        width: "100%",
         borderBottomRightRadius: hp(2),
         borderBottomLeftRadius: hp(2),
         borderBottomWidth: wp(1),
@@ -425,4 +317,4 @@ const style = StyleSheet.create({
         backgroundColor: '#ffffff',
     }
 });
-export default chat;
+// export default chat;

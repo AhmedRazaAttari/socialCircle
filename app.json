@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "socialCircle",
+    "name": "Meezer",
     "slug": "StockChat",
     "version": "0.1",
     "orientation": "portrait",
@@ -13,7 +13,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "icon": "./assets/icon.png",
@@ -21,6 +23,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "android": {
+      "package": "com.meezerapp.meezer",
+	"config": {
+      		"googleMaps": {
+        	"apiKey": "AIzaSyAg7sVWaPl7xyzvq_GAEv7zpnctt3WIpgY"
+      	}
+    }
     }
   }
 }

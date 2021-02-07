@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, StyleSheet, Image, TouchableOpacity, FlatList, ScrollView } from 'react-native';
+import {Dimensions, View, Text, SafeAreaView, StyleSheet, Image, TouchableOpacity, FlatList, ScrollView } from 'react-native';
 import { Left, Header, Body, Right, Form, Item, Input, Button, ListItem, Toast } from 'native-base';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 import fire, { database } from "../database/firebase";
 import { useIsFocused } from "@react-navigation/native";
 import { Alert } from 'react-native';
-
+import { Video } from 'expo-av';
 // import {
 //     GoogleSignin,
 //     GoogleSigninButton,
@@ -23,9 +23,9 @@ export default function login({ navigation }) {
     const isVisible = useIsFocused();
 
     useEffect(() => {
-        if (isVisible) {
-            AuthUser();
-        }
+        // if (isVisible) {
+        //     AuthUser();
+        // }
     }, [isVisible]);
 
     function AuthUser() {
@@ -51,24 +51,24 @@ export default function login({ navigation }) {
         if (email !== undefined && email !== "" && password !== undefined && password !== "") {
             fire.auth().signInWithEmailAndPassword(email, password)
                 .then(res => {
-                    try {
-                        AsyncStorage.setItem(
-                            '@userId', res.user.displayName
-                        );
-                    } catch (error) {
-                    }
-                    try {
-                        AsyncStorage.setItem(
-                            '@userImage', 'https://cactusthemes.com/blog/wp-content/uploads/2018/01/tt_avatar_small.jpg'
-                        );
-                    } catch (error) {
-                    }
-                    try {
-                        AsyncStorage.setItem(
-                            '@userEmail', res.user.email
-                        );
-                    } catch (error) {
-                    }
+                    // try {
+                    //     AsyncStorage.setItem(
+                    //         '@userId', res.user.displayName
+                    //     );
+                    // } catch (error) {
+                    // }
+                    // try {
+                    //     AsyncStorage.setItem(
+                    //         '@userImage', 'https://cactusthemes.com/blog/wp-content/uploads/2018/01/tt_avatar_small.jpg'
+                    //     );
+                    // } catch (error) {
+                    // }
+                    // try {
+                    //     AsyncStorage.setItem(
+                    //         '@userEmail', res.user.email
+                    //     );
+                    // } catch (error) {
+                    // }
 
                     console.log(res);
                     alert("User Login succesfully")
@@ -109,7 +109,7 @@ export default function login({ navigation }) {
                 <Left style={{ flex: 1 }}>
                 </Left>
                 <Body style={{ flex: 0 }}>
-                    <Text style={{ fontSize: hp(5), fontWeight: 'bold', color: '#d2d170' }}>Social Circle</Text>
+                    <Text style={{ fontSize: hp(5), fontWeight: 'bold', color: '#d2d170' }}>Meezer</Text>
                 </Body>
                 <Right style={{ flex: 1 }}>
                 </Right>
@@ -121,7 +121,17 @@ export default function login({ navigation }) {
                     </TouchableOpacity>
                 </View>
                 <View style={{ alignSelf: 'center' }}>
-                    <Image source={logo} />
+                    {/* <Image source={logo} /> */}
+                    <Video
+                        source={require("../../assets/Meezerinfo.mp4")}
+                        rate={1.0}
+                        volume={1.0}
+                        isMuted={true}
+                        resizeMode="contain"
+                        shouldPlay
+                        isLooping
+                        style={{ width: Dimensions.get("window").width, height: 250 }}
+                    />
                 </View>
                 <View>
                     <Form>

@@ -25,7 +25,7 @@ class splash extends Component {
                     <Image style={style.logoMain} source={logo} />
                 </View>
                 <Animatable.Text useNativeDriver={true} style={style.text} animation="fadeInUp" iterationCount={1} direction="alternate">Welcome to</Animatable.Text>
-                <Animatable.Text useNativeDriver={true} style={style.text1} animation="fadeInUp" iterationCount={1} direction="alternate">Social Circle!</Animatable.Text>
+                <Animatable.Text useNativeDriver={true} style={style.text1} animation="fadeInUp" iterationCount={1} direction="alternate">Meezer!</Animatable.Text>
                 <ActivityIndicator style={{ marginTop: hp(5) }} size="large" color="#0000ff" />
             </View>
         );

@@ -39,9 +39,9 @@ export default function Signup({ navigation }) {
       console.log("LOCATION ====>", location)
       setLocation(location.coords);
 
-      if (isVisible) {
-        AuthUser();
-      }
+      // if (isVisible) {
+      //   AuthUser();
+      // }
     })();
   }, [isVisible])
 
@@ -157,7 +157,7 @@ export default function Signup({ navigation }) {
         <Left style={{ flex: 1, }}>
         </Left>
         <Body style={{ justifyContent: 'center' }}>
-          <Text style={{ justifyContent: 'center', fontWeight: 'bold', color: '#d2d170', fontSize: hp(3) }}>Social Circle</Text>
+          <Text style={{ justifyContent: 'center', fontWeight: 'bold', color: '#d2d170', fontSize: hp(3) }}>Meezer</Text>
         </Body>
         <Right style={{ justifyContent: 'center' }}>
 
